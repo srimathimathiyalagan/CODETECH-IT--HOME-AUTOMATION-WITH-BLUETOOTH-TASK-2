@@ -1,0 +1,77 @@
+#include <SoftwareSerial.h>
+
+#define LED1 4  // LED 1 (Replace with Relay in real setup)
+#define LED2 5  // LED 2 (Replace with Relay in real setup)
+
+#define BUTTON1 8  // Button for LED 1
+#define BUTTON2 9  // Button for LED 2
+
+bool state1 = LOW;
+bool state2 = LOW;
+
+int lastButton1State = HIGH;
+int lastButton2State = HIGH;
+
+SoftwareSerial BTSerial(10, 11);  // RX, TX for Bluetooth Module
+
+void setup() {
+    pinMode(LED1, OUTPUT);
+    pinMode(LED2, OUTPUT);
+
+    pinMode(BUTTON1, INPUT_PULLUP);
+    pinMode(BUTTON2, INPUT_PULLUP);
+
+    Serial.begin(9600);    // For Serial Monitor
+    BTSerial.begin(9600);  // For Bluetooth Communication
+}
+
+void loop() {
+    int button1State = digitalRead(BUTTON1);
+    int button2State = digitalRead(BUTTON2);
+
+    // Button 1 Toggle
+    if (button1State == LOW && lastButton1State == HIGH) {  
+        delay(200);  // Debounce delay
+        state1 = !state1;
+        digitalWrite(LED1, state1);
+        Serial.print("Button: Device 1 ");
+        Serial.println(state1 ? "ON" : "OFF");
+    }
+
+    // Button 2 Toggle
+    if (button2State == LOW && lastButton2State == HIGH) {  
+        delay(200);  // Debounce delay
+        state2 = !state2;
+        digitalWrite(LED2, state2);
+        Serial.print("Button: Device 2 ");
+        Serial.println(state2 ? "ON" : "OFF");
+    }
+
+    lastButton1State = button1State;
+    lastButton2State = button2State;
+
+    // Bluetooth Command Handling
+    if (BTSerial.available()) {
+        char command = BTSerial.read();
+        
+        // Bluetooth Command for LED 1
+        if (command == '1') {  
+            digitalWrite(LED1, HIGH);
+            Serial.println("Bluetooth: Device 1 ON");
+        }
+        else if (command == '0') {
+            digitalWrite(LED1, LOW);
+            Serial.println("Bluetooth: Device 1 OFF");
+        }
+
+        // Bluetooth Command for LED 2
+        else if (command == '3') {  
+            digitalWrite(LED2, HIGH);
+            Serial.println("Bluetooth: Device 2 ON");
+        }
+        else if (command == '2') {
+            digitalWrite(LED2, LOW);
+            Serial.println("Bluetooth: Device 2 OFF");
+        }
+    }
+}
